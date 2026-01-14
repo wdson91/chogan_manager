@@ -27,7 +27,7 @@ function cleanString(value: unknown): string | null {
 function getColumnValue(row: Record<string, unknown>, possibleNames: string[]): string {
     for (const name of possibleNames) {
         if (row[name] !== undefined && row[name] !== null && row[name] !== "") {
-            return row[name]
+            return String(row[name])
         }
     }
     return ""
