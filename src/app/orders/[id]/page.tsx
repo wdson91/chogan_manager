@@ -105,7 +105,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {order.items.map((item: any) => (
+                                {order.items.map((item) => (
                                     <TableRow key={item.id}>
                                         <TableCell>
                                             <div className="font-medium">{item.product.name}</div>

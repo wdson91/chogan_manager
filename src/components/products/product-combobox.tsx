@@ -55,17 +55,19 @@ export function ProductCombobox({ value, onSelect, products = [] }: ProductCombo
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between"
+                    className="w-full justify-between min-w-0"
                 >
-                    {value
-                        ? (() => {
-                            const product = products.find((p) => p.id === value)
-                            if (!product) return "Produto não encontrado"
-                            return product.size
-                                ? `${product.name} - ${product.size} (${product.stockQuantity || 0})`
-                                : `${product.name} (${product.stockQuantity || 0})`
-                        })()
-                        : "Selecione um produto..."}
+                    <span className="truncate text-left flex-1">
+                        {value
+                            ? (() => {
+                                const product = products.find((p) => p.id === value)
+                                if (!product) return "Produto não encontrado"
+                                return product.size
+                                    ? `${product.name} - ${product.size} (${product.stockQuantity || 0})`
+                                    : `${product.name} (${product.stockQuantity || 0})`
+                            })()
+                            : "Selecione um produto..."}
+                    </span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>

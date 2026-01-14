@@ -120,8 +120,9 @@ export function OrderForm({ customers, products }: OrderFormProps) {
                 await createOrder(data)
                 toast.success("Encomenda criada com sucesso!")
                 // Optional: Reset form or redirect handled by server action
-            } catch (error: any) {
-                toast.error(error.message || "Falha ao criar encomenda.")
+            } catch (error) {
+                const message = error instanceof Error ? error.message : "Falha ao criar encomenda."
+                toast.error(message)
             }
         })
     }
@@ -131,7 +132,8 @@ export function OrderForm({ customers, products }: OrderFormProps) {
         const product = products.find(p => p.id === productId)
         if (product) {
             form.setValue(`items.${index}.productId`, productId)
-            form.setValue(`items.${index}.unitPrice`, product.sellPrice)
+            // Set cost price as default for sell price, but user can change it
+            form.setValue(`items.${index}.unitPrice`, product.costPrice)
             // Keep quantity if exists, or set 1
             const currentQty = form.getValues(`items.${index}.quantity`)
             if (!currentQty) form.setValue(`items.${index}.quantity`, 1)
@@ -218,14 +220,14 @@ export function OrderForm({ customers, products }: OrderFormProps) {
 
                     <div className="border rounded-md p-4 space-y-4">
                         {fields.map((field, index) => (
-                            <div key={field.id} className="grid grid-cols-12 gap-4 items-end">
+                            <div key={field.id} className="grid grid-cols-12 gap-2 items-end">
                                 {/* Product Select */}
-                                <div className="col-span-12 md:col-span-5">
+                                <div className="col-span-8 md:col-span-4">
                                     <FormField
                                         control={form.control}
                                         name={`items.${index}.productId`}
                                         render={({ field }) => (
-                                            <FormItem className="flex flex-col">
+                                            <FormItem>
                                                 <FormLabel className={index !== 0 ? "sr-only" : ""}>Produto</FormLabel>
                                                 <FormControl>
                                                     <ProductCombobox
@@ -241,7 +243,7 @@ export function OrderForm({ customers, products }: OrderFormProps) {
                                 </div>
 
                                 {/* Quantity */}
-                                <div className="col-span-6 md:col-span-2">
+                                <div className="col-span-5 md:col-span-2">
                                     <FormField
                                         control={form.control}
                                         name={`items.${index}.quantity`}
@@ -263,14 +265,36 @@ export function OrderForm({ customers, products }: OrderFormProps) {
                                     />
                                 </div>
 
-                                {/* Unit Price */}
+                                {/* Cost Price (Read-only) */}
+                                <div className="col-span-6 md:col-span-2">
+                                    <FormItem>
+                                        <FormLabel className={index !== 0 ? "sr-only" : ""}>Custo (€)</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                readOnly
+                                                value={
+                                                    (() => {
+                                                        const productId = items?.[index]?.productId
+                                                        const product = products.find(p => p.id === productId)
+                                                        return product?.costPrice || 0
+                                                    })()
+                                                }
+                                                className="bg-muted cursor-not-allowed"
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                </div>
+
+                                {/* Unit Price (Sell Price) */}
                                 <div className="col-span-6 md:col-span-2">
                                     <FormField
                                         control={form.control}
                                         name={`items.${index}.unitPrice`}
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className={index !== 0 ? "sr-only" : ""}>Preço (€)</FormLabel>
+                                                <FormLabel className={index !== 0 ? "sr-only" : ""}>Venda (€)</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         type="number"
@@ -278,6 +302,7 @@ export function OrderForm({ customers, products }: OrderFormProps) {
                                                         {...field}
                                                         onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
                                                         onFocus={(e) => e.target.select()}
+                                                        
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -287,7 +312,7 @@ export function OrderForm({ customers, products }: OrderFormProps) {
                                 </div>
 
                                 {/* Subtotal Display (Not a field) */}
-                                <div className="col-span-6 md:col-span-2 flex items-center justify-end pb-2">
+                                <div className="col-span-6 md:col-span-1  pb-2">
                                     <span className="text-sm font-medium">
                                         {new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" }).format(
                                             (form.watch(`items.${index}.quantity`) || 0) * (form.watch(`items.${index}.unitPrice`) || 0)
@@ -296,7 +321,7 @@ export function OrderForm({ customers, products }: OrderFormProps) {
                                 </div>
 
                                 {/* Remove Button */}
-                                <div className="col-span-6 md:col-span-1">
+                                <div className="col-span-1 md:col-span-1">
                                     <Button
                                         type="button"
                                         variant="ghost"

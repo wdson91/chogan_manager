@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache"
 import Papa from "papaparse"
 
 // Helper function to clean decimal values (comma to dot, remove currency symbols)
-function cleanDecimal(value: any): number {
+function cleanDecimal(value: unknown): number {
     if (!value) return 0
     const stringValue = String(value)
     if (stringValue.trim() === "") return 0
@@ -16,7 +16,7 @@ function cleanDecimal(value: any): number {
 }
 
 // Helper function to clean string values
-function cleanString(value: any): string | null {
+function cleanString(value: unknown): string | null {
     if (!value) return null
     const stringValue = String(value)
     if (stringValue.trim() === "") return null
@@ -24,7 +24,7 @@ function cleanString(value: any): string | null {
 }
 
 // Helper function to get column value with flexible name matching
-function getColumnValue(row: any, possibleNames: string[]): string {
+function getColumnValue(row: Record<string, unknown>, possibleNames: string[]): string {
     for (const name of possibleNames) {
         if (row[name] !== undefined && row[name] !== null && row[name] !== "") {
             return row[name]
@@ -64,7 +64,7 @@ export async function importCustomers(formData: FormData): Promise<ImportResult>
                 }
 
                 try {
-                    for (const row of results.data as any[]) {
+                    for (const row of results.data as Record<string, unknown>[]) {
                         try {
                             const name = cleanString(row.Nome)
                             const phone = cleanString(row.Telefone)
@@ -103,15 +103,17 @@ export async function importCustomers(formData: FormData): Promise<ImportResult>
                             })
 
                             result.insertedCount++
-                        } catch (error: any) {
-                            result.errors.push(`Erro na linha: ${error.message}`)
+                        } catch (error) {
+                            const message = error instanceof Error ? error.message : "Erro desconhecido"
+                            result.errors.push(`Erro na linha: ${message}`)
                         }
                     }
 
                     revalidatePath("/customers")
                     resolve(result)
-                } catch (error: any) {
-                    result.errors.push(`Erro geral: ${error.message}`)
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : "Erro desconhecido"
+                    result.errors.push(`Erro geral: ${message}`)
                     resolve(result)
                 }
             }
@@ -145,7 +147,7 @@ export async function importProducts(formData: FormData): Promise<ImportResult> 
 
                 try {
                     // First, collect all product codes from CSV
-                    const allCodes = (results.data as any[])
+                    const allCodes = (results.data as Record<string, unknown>[])
                         .map(row => cleanString(row.Código))
                         .filter((code): code is string => !!code)
 
@@ -163,14 +165,14 @@ export async function importProducts(formData: FormData): Promise<ImportResult> 
 
                     // Create a map for O(1) lookup
                     const existingProductsMap = new Map(
-                        existingProducts.map((p: { code: any; id: any }) => [p.code, p.id])
+                        existingProducts.map((p) => [p.code, p.id])
                     )
 
                     // Collect all products to insert/update
                     const productsToCreate = []
                     const productsToUpdate = []
 
-                    for (const row of results.data as any[]) {
+                    for (const row of results.data as Record<string, unknown>[]) {
                         try {
                             const code = cleanString(row.Código)
                             const name = cleanString(row.Nome)
@@ -248,8 +250,9 @@ export async function importProducts(formData: FormData): Promise<ImportResult> 
                                     stockQuantity: 0
                                 })
                             }
-                        } catch (error: any) {
-                            result.errors.push(`Erro na linha: ${error.message}`)
+                        } catch (error) {
+                            const message = error instanceof Error ? error.message : "Erro desconhecido"
+                            result.errors.push(`Erro na linha: ${message}`)
                         }
                     }
 
@@ -287,8 +290,9 @@ export async function importProducts(formData: FormData): Promise<ImportResult> 
 
                     revalidatePath("/products")
                     resolve(result)
-                } catch (error: any) {
-                    result.errors.push(`Erro geral: ${error.message}`)
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : "Erro desconhecido"
+                    result.errors.push(`Erro geral: ${message}`)
                     resolve(result)
                 }
             }

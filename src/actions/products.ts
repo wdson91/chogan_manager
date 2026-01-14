@@ -61,7 +61,7 @@ export async function deleteProduct(id: string) {
 export async function getProducts() {
     const userId = await getUserId()
 
-    return await prisma.product.findMany({
+    const products = await prisma.product.findMany({
         where: {
             userId,
         },
@@ -69,4 +69,11 @@ export async function getProducts() {
             name: "asc",
         },
     })
+
+    // Convert Decimals to numbers for Client Components
+    return products.map((p) => ({
+        ...p,
+        costPrice: Number(p.costPrice),
+        sellPrice: Number(p.sellPrice),
+    }))
 }

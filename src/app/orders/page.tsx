@@ -25,7 +25,7 @@ export default async function OrdersPage() {
         }
     })
 
-    const serializedOrders = orders.map((order: any) => ({
+    const serializedOrders = orders.map((order) => ({
         ...order,
         totalAmount: Number(order.totalAmount),
         totalProfit: Number(order.totalProfit),

@@ -70,8 +70,9 @@ export default function DataImportPage() {
                 setCustomerFile(null)
                 const input = document.getElementById("customer-file") as HTMLInputElement
                 if (input) input.value = ""
-            } catch (error: any) {
-                toast.error(`Erro: ${error.message}`)
+            } catch (error) {
+                const message = error instanceof Error ? error.message : "Erro desconhecido"
+                toast.error(`Erro: ${message}`)
             }
         })
     }
@@ -117,8 +118,9 @@ export default function DataImportPage() {
                 setProductFile(null)
                 const input = document.getElementById("product-file") as HTMLInputElement
                 if (input) input.value = ""
-            } catch (error: any) {
-                toast.error(`Erro: ${error.message}`)
+            } catch (error) {
+                const message = error instanceof Error ? error.message : "Erro desconhecido"
+                toast.error(`Erro: ${message}`)
             }
         })
     }
@@ -132,8 +134,9 @@ export default function DataImportPage() {
             try {
                 const result = await deleteAllProducts()
                 toast.success(`${result.deletedCount} produtos eliminados com sucesso!`)
-            } catch (error: any) {
-                toast.error(`Erro ao eliminar produtos: ${error.message}`)
+            } catch (error) {
+                const message = error instanceof Error ? error.message : "Erro desconhecido"
+                toast.error(`Erro ao eliminar produtos: ${message}`)
             }
         })
     }

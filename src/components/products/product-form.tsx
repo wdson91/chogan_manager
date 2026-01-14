@@ -53,7 +53,7 @@ export function ProductForm({ initialData, onOpenChange }: ProductFormProps) {
                     toast.success("Produto criado com sucesso.")
                 }
                 onOpenChange?.(false)
-            } catch (error) {
+            } catch {
                 toast.error("Algo correu mal.")
             }
         })

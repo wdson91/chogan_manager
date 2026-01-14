@@ -55,7 +55,7 @@ export function OrdersClient({ data }: OrdersClientProps) {
                         toast.success(`${ids.length} encomendas atualizadas!`)
                         table.resetRowSelection()
                         setSelectedStatus("")
-                    } catch (error) {
+                    } catch {
                         toast.error("Erro ao atualizar encomendas.")
                     } finally {
                         setIsUpdating(false)

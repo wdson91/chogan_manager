@@ -3,13 +3,12 @@
 import { prisma } from "@/lib/prisma"
 import { getUser } from "@/lib/supabase/auth"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 
 export async function getSupplierOrders() {
     const user = await getUser()
     if (!user) return []
 
-    return await prisma.supplierOrder.findMany({
+    const orders = await prisma.supplierOrder.findMany({
         where: { userId: user.id },
         include: {
             items: {
@@ -18,13 +17,28 @@ export async function getSupplierOrders() {
         },
         orderBy: { orderDate: 'desc' }
     })
+
+    // Convert Decimals to numbers for Client Components
+    return orders.map((order) => ({
+        ...order,
+        totalAmount: Number(order.totalAmount),
+        items: order.items.map((item) => ({
+            ...item,
+            unitCost: Number(item.unitCost),
+            product: item.product ? {
+                ...item.product,
+                costPrice: Number(item.product.costPrice),
+                sellPrice: Number(item.product.sellPrice),
+            } : null
+        }))
+    }))
 }
 
 export async function getSupplierOrder(id: string) {
     const user = await getUser()
     if (!user) return null
 
-    return await prisma.supplierOrder.findUnique({
+    const order = await prisma.supplierOrder.findUnique({
         where: { id, userId: user.id },
         include: {
             items: {
@@ -32,9 +46,30 @@ export async function getSupplierOrder(id: string) {
             }
         }
     })
+
+    if (!order) return null
+
+    // Convert Decimals to numbers for Client Components
+    return {
+        ...order,
+        totalAmount: Number(order.totalAmount),
+        items: order.items.map((item) => ({
+            ...item,
+            unitCost: Number(item.unitCost),
+            product: item.product ? {
+                ...item.product,
+                costPrice: Number(item.product.costPrice),
+                sellPrice: Number(item.product.sellPrice),
+            } : null
+        }))
+    }
 }
 
 export async function createSupplierOrder(data: {
+    orderNum?: string
+    orderDate?: string
+    expectedDate?: string
+    receivedDate?: string
     notes?: string
     items: {
         productId?: string
@@ -53,6 +88,10 @@ export async function createSupplierOrder(data: {
     const order = await prisma.supplierOrder.create({
         data: {
             userId: user.id,
+            orderNum: data.orderNum || null,
+            orderDate: data.orderDate ? new Date(data.orderDate) : new Date(),
+            expectedDate: data.expectedDate ? new Date(data.expectedDate) : null,
+            receivedDate: data.receivedDate ? new Date(data.receivedDate) : null,
             notes: data.notes,
             totalAmount,
             status: "PENDING",
@@ -84,10 +123,13 @@ export async function receiveSupplierOrder(id: string) {
 
     // Transaction to update stock and order status
     await prisma.$transaction(async (tx) => {
-        // 1. Update status
+        // 1. Update status and receivedDate
         await tx.supplierOrder.update({
             where: { id },
-            data: { status: "COMPLETED" }
+            data: { 
+                status: "COMPLETED",
+                receivedDate: new Date()
+            }
         })
 
         // 2. Update stock for linked products

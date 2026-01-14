@@ -3,122 +3,109 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// Models
 model User {
-  id            String    @id @db.Uuid
-  name          String?
-  email         String    @unique
-  avatarUrl     String?   @map("avatar_url")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  customers     Customer[]
-  products      Product[]
-  orders        Order[]
+  id             String          @id @db.Uuid
+  name           String?
+  email          String          @unique
+  avatarUrl      String?         @map("avatar_url")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  customers      Customer[]
+  orders         Order[]
+  products       Product[]
   supplierOrders SupplierOrder[]
 
   @@map("users")
 }
 
 model Customer {
-  id              String    @id @default(uuid()) @db.Uuid
-  userId          String    @db.Uuid
-  name            String
-  phone           String
-  email           String?
-  address         String?
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @db.Uuid
+  name             String
+  phone            String
+  email            String?
+  address          String?
   registrationDate DateTime @default(now()) @map("registration_date")
-  notes           String?
-  
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders          Order[]
+  notes            String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders           Order[]
 
   @@map("customers")
 }
 
 model Product {
-  id            String    @id @default(uuid()) @db.Uuid
-  userId        String    @db.Uuid
-  code          String
-  name          String
-  category      String
-  range         String    // "Gama"
-  equivalence   String?   // "Equivalência"
-  costPrice     Decimal   @map("cost_price")
-  sellPrice     Decimal   @map("sell_price")
-  stockQuantity Int       @map("stock_quantity")
-  allowNegativeStock Boolean @default(true) @map("allow_negative_stock")
-  notes         String?
-  size          String?   // "Tamanho"
-
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orderItems    OrderItem[]
+  id                 String              @id @default(uuid()) @db.Uuid
+  userId             String              @db.Uuid
+  code               String
+  name               String
+  category           String
+  range              String
+  equivalence        String?
+  costPrice          Decimal             @map("cost_price")
+  sellPrice          Decimal             @map("sell_price")
+  stockQuantity      Int                 @map("stock_quantity")
+  notes              String?
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  allowNegativeStock Boolean             @default(true) @map("allow_negative_stock")
+  size               String?
+  orderItems         OrderItem[]
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   supplierOrderItems SupplierOrderItem[]
 
   @@map("products")
 }
 
 model Order {
-  id            String      @id @default(uuid()) @db.Uuid
-  userId        String      @db.Uuid
-  customerId    String      @db.Uuid
-  status        String      @default("PENDING")
-  totalAmount   Decimal     @map("total_amount")
-  totalProfit   Decimal     @map("total_profit")
-  orderDate     DateTime    @default(now()) @map("order_date")
-
-  createdAt     DateTime    @default(now()) @map("created_at")
-  updatedAt     DateTime    @updatedAt @map("updated_at")
-
-  // Relations
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  customer      Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  items         OrderItem[]
+  id          String      @id @default(uuid()) @db.Uuid
+  userId      String      @db.Uuid
+  customerId  String      @db.Uuid
+  status      String      @default("PENDING")
+  totalAmount Decimal     @map("total_amount")
+  totalProfit Decimal     @map("total_profit")
+  orderDate   DateTime    @default(now()) @map("order_date")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  items       OrderItem[]
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("orders")
 }
 
 model OrderItem {
-  id            String    @id @default(uuid()) @db.Uuid
-  orderId       String    @db.Uuid
-  productId     String    @db.Uuid
-  quantity      Int
-  unitPrice     Decimal   @map("unit_price")
-  subtotal      Decimal
-
-  // Relations
-  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product       Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  id        String  @id @default(uuid()) @db.Uuid
+  orderId   String  @db.Uuid
+  productId String  @db.Uuid
+  quantity  Int
+  unitPrice Decimal @map("unit_price")
+  subtotal  Decimal
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product   Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("order_items")
 }
 
 model SupplierOrder {
-  id            String              @id @default(uuid()) @db.Uuid
-  userId        String              @db.Uuid
-  status        String              @default("PENDING") // PENDING, COMPLETED
-  totalAmount   Decimal             @default(0) @map("total_amount")
-  orderDate     DateTime            @default(now()) @map("order_date")
-  createdAt     DateTime            @default(now()) @map("created_at")
-  updatedAt     DateTime            @updatedAt @map("updated_at")
-  notes         String?
-
-  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items         SupplierOrderItem[]
+  id           String              @id @default(uuid()) @db.Uuid
+  userId       String              @db.Uuid
+  status       String              @default("PENDING")
+  totalAmount  Decimal             @default(0) @map("total_amount")
+  orderDate    DateTime            @default(now()) @map("order_date")
+  expectedDate DateTime?           @map("expected_date")
+  receivedDate DateTime?           @map("received_date")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  notes        String?
+  orderNum     String?             @map("order_num")
+  items        SupplierOrderItem[]
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("supplier_orders")
 }
@@ -129,9 +116,8 @@ model SupplierOrderItem {
   productId       String?       @db.Uuid
   quantity        Int
   unitCost        Decimal       @map("unit_cost")
-  
-  order           SupplierOrder @relation(fields: [supplierOrderId], references: [id], onDelete: Cascade)
   product         Product?      @relation(fields: [productId], references: [id])
+  order           SupplierOrder @relation(fields: [supplierOrderId], references: [id], onDelete: Cascade)
 
   @@map("supplier_order_items")
 }

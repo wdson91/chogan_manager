@@ -107,7 +107,7 @@ function ProductActions({ product }: { product: ProductRow }) {
         try {
             await deleteProduct(product.id)
             toast.success("Produto eliminado.")
-        } catch (error) {
+        } catch {
             toast.error("Erro ao eliminar.")
         }
     }

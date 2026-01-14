@@ -18,7 +18,7 @@ export async function createOrder(data: OrderFormValues) {
     const { customerId, items } = validatedResult.data
 
     try {
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx) => {
             let totalAmount = 0
             let totalProfit = 0
 
@@ -57,7 +57,7 @@ export async function createOrder(data: OrderFormValues) {
 
             // 3. Create Order Items & Update Stock
             for (const item of items) {
-                const product = await tx.product.findUniqueOrThrow({ where: { id: item.productId } })
+                await tx.product.findUniqueOrThrow({ where: { id: item.productId } })
 
                 // Create Item
                 await tx.orderItem.create({
@@ -81,9 +81,10 @@ export async function createOrder(data: OrderFormValues) {
                 })
             }
         })
-    } catch (error: any) {
+    } catch (error) {
         console.error("Transaction failed:", error)
-        throw new Error(error.message || "Failed to create order")
+        const message = error instanceof Error ? error.message : "Failed to create order"
+        throw new Error(message)
     }
 
     revalidatePath("/dashboard")
@@ -103,8 +104,9 @@ export async function updateOrderStatus(id: string, status: string) {
             where: { id, userId },
             data: { status }
         })
-    } catch (error: any) {
-        throw new Error(error.message || "Failed to update order status")
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to update order status"
+        throw new Error(message)
     }
 
     revalidatePath("/orders")
@@ -130,8 +132,9 @@ export async function bulkUpdateOrderStatus(ids: string[], status: string) {
             },
             data: { status }
         })
-    } catch (error: any) {
-        throw new Error(error.message || "Failed to update orders")
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to update orders"
+        throw new Error(message)
     }
 
     revalidatePath("/orders")
@@ -156,5 +159,20 @@ export async function getOrder(id: string) {
         return null
     }
 
-    return order
+    // Convert Decimals to numbers for Client Components
+    return {
+        ...order,
+        totalAmount: Number(order.totalAmount),
+        totalProfit: Number(order.totalProfit),
+        items: order.items.map((item) => ({
+            ...item,
+            unitPrice: Number(item.unitPrice),
+            subtotal: Number(item.subtotal),
+            product: {
+                ...item.product,
+                costPrice: Number(item.product.costPrice),
+                sellPrice: Number(item.product.sellPrice),
+            }
+        }))
+    }
 }

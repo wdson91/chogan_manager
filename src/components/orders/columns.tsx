@@ -89,7 +89,7 @@ export const columns: ColumnDef<OrderWithCustomer>[] = [
                 try {
                     await updateOrderStatus(id, newStatus)
                     toast.success("Estado atualizado com sucesso!")
-                } catch (error) {
+                } catch {
                     toast.error("Erro ao atualizar estado.")
                 }
             }

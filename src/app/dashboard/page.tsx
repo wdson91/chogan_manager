@@ -26,7 +26,7 @@ export default async function DashboardPage() {
 
     const monthlyDataMap = new Map<string, number>();
 
-    orders.forEach((order: { orderDate: Date; totalAmount: any }) => {
+    orders.forEach((order) => {
         const month = order.orderDate.toLocaleString('pt-PT', { month: 'short' });
         const amount = Number(order.totalAmount);
         monthlyDataMap.set(month, (monthlyDataMap.get(month) || 0) + amount);
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
         total
     }));
 
-    const totalRevenue = orders.reduce((sum: number, o: { totalAmount: any }) => sum + Number(o.totalAmount), 0);
+    const totalRevenue = orders.reduce((sum: number, o) => sum + Number(o.totalAmount), 0);
     const totalOrders = orders.length;
 
     return (

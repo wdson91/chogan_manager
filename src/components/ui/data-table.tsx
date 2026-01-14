@@ -30,6 +30,7 @@ interface DataTableProps<TData, TValue> {
     filterColumn?: string
     filterPlaceholder?: string
     bulkActions?: (table: ReactTable<TData>) => React.ReactNode
+    onRowClick?: (row: TData) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -38,6 +39,7 @@ export function DataTable<TData, TValue>({
     filterColumn,
     filterPlaceholder,
     bulkActions,
+    onRowClick,
 }: DataTableProps<TData, TValue>) {
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [rowSelection, setRowSelection] = useState({})
@@ -99,6 +101,13 @@ export function DataTable<TData, TValue>({
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
+                                    className={onRowClick ? "cursor-pointer" : undefined}
+                                    onClick={(e) => {
+                                        if (!onRowClick) return
+                                        const target = e.target as HTMLElement | null
+                                        if (target?.closest?.('[data-row-click-ignore="true"]')) return
+                                        onRowClick(row.original)
+                                    }}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>

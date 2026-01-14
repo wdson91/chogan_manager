@@ -63,7 +63,7 @@ function CustomerActions({ customer }: { customer: Customer }) {
         try {
             await deleteCustomer(customer.id)
             toast.success("Cliente eliminado.")
-        } catch (error) {
+        } catch {
             toast.error("Falha ao eliminar.")
         }
     }

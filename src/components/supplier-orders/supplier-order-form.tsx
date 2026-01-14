@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm, useFieldArray, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
 
 const supplierOrderSchema = z.object({
+    orderNum: z.string().optional(),
+    orderDate: z.string().optional(),
+    expectedDate: z.string().optional(),
+    receivedDate: z.string().optional(),
     notes: z.string().optional(),
     items: z.array(z.object({
         productId: z.string().min(1, "Selecione um produto"), // Optional? As per plan, we enforce product linking for now.
@@ -53,6 +57,10 @@ export function SupplierOrderForm({ products }: SupplierOrderFormProps) {
     const form = useForm<SupplierOrderFormValues>({
         resolver: zodResolver(supplierOrderSchema),
         defaultValues: {
+            orderNum: "",
+            orderDate: new Date().toISOString().split('T')[0], // Today's date as default
+            expectedDate: "",
+            receivedDate: "",
             notes: "",
             items: [{ productId: "", quantity: 1, unitCost: 0 }]
         }
@@ -63,10 +71,18 @@ export function SupplierOrderForm({ products }: SupplierOrderFormProps) {
         control: form.control,
     })
 
+    // Watch items to recalculate total automatically
+    const watchedItems = useWatch({
+        control: form.control,
+        name: "items"
+    })
+
     const calculateTotal = () => {
-        const items = form.getValues("items")
-        return items.reduce((total, item) => {
-            return total + (item.quantity * item.unitCost)
+        if (!watchedItems) return 0
+        return watchedItems.reduce((total, item) => {
+            const quantity = item?.quantity || 0
+            const unitCost = item?.unitCost || 0
+            return total + (quantity * unitCost)
         }, 0)
     }
 
@@ -97,6 +113,61 @@ export function SupplierOrderForm({ products }: SupplierOrderFormProps) {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 <Card>
                     <CardContent className="pt-6">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <FormField
+                                control={form.control}
+                                name="orderNum"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Nº da Encomenda</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Ex: 2026-001" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="orderDate"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Data que foi pedido</FormLabel>
+                                        <FormControl>
+                                            <Input type="date" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="expectedDate"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Data prevista</FormLabel>
+                                        <FormControl>
+                                            <Input type="date" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="receivedDate"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Data que chegou</FormLabel>
+                                        <FormControl>
+                                            <Input type="date" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <div className="mt-4">
                         <FormField
                             control={form.control}
                             name="notes"
@@ -110,6 +181,7 @@ export function SupplierOrderForm({ products }: SupplierOrderFormProps) {
                                 </FormItem>
                             )}
                         />
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -131,7 +203,7 @@ export function SupplierOrderForm({ products }: SupplierOrderFormProps) {
                         <Card key={field.id}>
                             <CardContent className="pt-6">
                                 <div className="grid gap-4 md:grid-cols-12 items-end">
-                                    <div className="md:col-span-6">
+                                    <div className="md:col-span-4">
                                         <FormField
                                             control={form.control}
                                             name={`items.${index}.productId`}
@@ -192,6 +264,17 @@ export function SupplierOrderForm({ products }: SupplierOrderFormProps) {
                                                 </FormItem>
                                             )}
                                         />
+                                    </div>
+                                    <div className="md:col-span-2 flex items-center justify-end pb-2">
+                                        <div className="text-right">
+                                            <div className="text-xs text-muted-foreground">Subtotal</div>
+                                            <div className="font-medium">
+                                                {formatCurrency(
+                                                    (watchedItems?.[index]?.quantity || 0) * 
+                                                    (watchedItems?.[index]?.unitCost || 0)
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className="md:col-span-1">
                                         <Button

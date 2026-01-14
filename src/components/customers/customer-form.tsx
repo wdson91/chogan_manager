@@ -54,7 +54,7 @@ export function CustomerForm({ initialData, onOpenChange }: CustomerFormProps) {
                     toast.success("Cliente criado com sucesso.")
                 }
                 onOpenChange?.(false)
-            } catch (error) {
+            } catch {
                 toast.error("Something went wrong.")
             }
         })

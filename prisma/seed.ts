@@ -33,7 +33,7 @@ async function main() {
         },
     })
 
-    const customer2 = await prisma.customer.create({
+    await prisma.customer.create({
         data: {
             userId: user.id,
             name: 'João Santos',

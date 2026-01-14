@@ -23,14 +23,14 @@ export default async function NewOrderPage() {
         })
     ])
 
-    const serializedProducts = products.map((p: any) => ({
+    const serializedProducts = products.map((p) => ({
         ...p,
         costPrice: Number(p.costPrice),
         sellPrice: Number(p.sellPrice)
     }))
 
     return (
-        <div className="container mx-auto py-6 md:py-10 px-4 md:px-6 max-w-4xl">
+        <div className="container mx-auto py-4 md:py-6 px-2 md:px-4 max-w-6xl">
             <div className="mb-8">
                 <h1 className="text-2xl md:text-3xl font-bold">Nova Encomenda</h1>
                 <p className="text-muted-foreground">Criar uma nova encomenda de venda.</p>
