@@ -31,7 +31,7 @@ export default async function ProductsPage() {
     })
 
     // Convert Decimals to numbers for Client Components
-    const products: ProductRow[] = productsRaw.map((p) => ({
+    const products: ProductRow[] | any = productsRaw.map((p) => ({
         ...p,
         costPrice: Number(p.costPrice),
         sellPrice: Number(p.sellPrice)

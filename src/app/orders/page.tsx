@@ -1,6 +1,7 @@
 import { getUser } from "@/lib/supabase/auth"
 import { prisma } from "@/lib/prisma"
 import { OrdersClient } from "@/components/orders/orders-client"
+import { OrderWithCustomer } from "@/components/orders/columns"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
@@ -25,7 +26,7 @@ export default async function OrdersPage() {
         }
     })
 
-    const serializedOrders = orders.map((order) => ({
+    const serializedOrders: OrderWithCustomer[] = orders.map((order) => ({
         ...order,
         totalAmount: Number(order.totalAmount),
         totalProfit: Number(order.totalProfit),

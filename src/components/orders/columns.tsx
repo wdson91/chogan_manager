@@ -25,8 +25,11 @@ import { toast } from "sonner"
 import Link from "next/link"
 
 // We need an extended type because we include the Customer relation
-export type OrderWithCustomer = Order & {
+// Serialized version with Decimal fields converted to number
+export type OrderWithCustomer = Omit<Order, 'totalAmount' | 'totalProfit'> & {
     customer: Customer
+    totalAmount: number
+    totalProfit: number
 }
 
 export const columns: ColumnDef<OrderWithCustomer>[] = [
